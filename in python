@@ -1,56 +1,103 @@
+Trump tweets classifier in Python
+
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction import text
 import os
+
+
 data_dir='G:\shahad\PYTHON\FILES'
 os.chdir(data_dir)
 data=pd.read_csv('trump_tweets.csv',encoding='latin')
 data.head()
+
+
 data['source'].unique()
+
+
 data_cleaned=data.query("source=='Twitter for Android' or source=='Twitter for iPhone'")
 data_cleaned.shape
+
+
 ## We need to create a target column based on source
+
+
 def get_trump(x):
     if x=='Twitter for Android':
         return 1
     else:
         return 0
+        
+        
 data_cleaned['target']=data_cleaned['source'].map(get_trump)
 data_cleaned.head()
+
+
 data_cleaned['created_at']=pd.to_datetime(data_cleaned['created_at'])
 data_cleaned['year']=data_cleaned['created_at'].dt.year
 data_cleaned.head()
+
+
 train=data_cleaned.query("year<=2016")
 test=data_cleaned.query("year>2016")
+
+
 x_train=train['text']
 y_train=train['target']
 x_test=test['text']
 y_test=test['target']
 x_train.head()
+
+
 x_train=x_train.str.replace("RT@","")
 x_test=x_test.str.replace("RT@","")
+
+
 ## We will create tfidf on x_train and tranform x_test with one we trained on x_train
+
+
 corpus=x_train.tolist()
+
 tf_trump=text.TfidfVectorizer(input=corpus,ngram_range=(1,2),max_features=500,stop_words="english")
+
 x_train=tf_trump.fit_transform(corpus)
+
 corpus_test=x_test.tolist()
+
 x_test=tf_trump.transform(corpus_test)
 x_train.shape
 x_test.shape
+
+
 from sklearn.ensemble import RandomForestClassifier
+
+
 clf=RandomForestClassifier(n_estimators=100)
 clf.fit(x_train,y_train)
 pred=clf.predict(x_test)
 clf.score(x_test,y_test)
+
+
 #how svm model is built
+
 from sklearn.svm import SVC
 clf=SVC()
+
+
 #grid search to find optimum value for kernel and c
+
 from sklearn.model_selection import GridSearchCV
+
+
 #creting grid of values
+
 grid={'C':[1,2,3,4,5],'kernel':['rbf','linear','poly']}
+
+
 #creting grid of values
+
 grid={'C':[1,2,3,4,5],'kernel':['rbf','linear','poly']}
+
 model.fit(x_train,y_train)
 model.best_params_
 model.best_score_
